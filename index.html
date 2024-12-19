@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Platformer 1</title>
+</head>
+<body>
+    <canvas id="canvas" width="800" height="600" style="border: 1px solid black"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const player = new Image();
+        player.src = 'player.png';
+        const playerDx = 32;
+        const playerDy = 0;
+        const playerDHeight = 128;
+        const playerDWidth = 64;
+        const playerHeight = 64;
+        const playerWidth = 32;
+        const worldWidth = 1000;
+        const worldHeight = 750;
+        const keys = {};
+        const playerMaxJumps = 2;
+        const platforms = [
+            {
+                x: 20,
+                y: worldHeight - 50,
+                width: 200,
+                height: 20,
+            }
+        ];
+        let playerX = 0;
+        let playerY = worldHeight - playerHeight;
+        let cameraX = 0;
+        let cameraY = 0;
+        let playerJumpCount = 0;
+
+        function drawPlayer() {
+            ctx.drawImage(
+                player,
+                playerDx,
+                playerDy,
+                playerDWidth,
+                playerDHeight,
+                playerX - cameraX,
+                playerY - cameraY,
+                playerWidth,
+                playerHeight
+            );
+        }
+
+        function movePlayer() {
+            if (keys["ArrowLeft"]) playerX -= 5;
+            if (keys["ArrowRight"]) playerX += 5;
+            if (keys["ArrowUp"] && playerJumpCount < playerMaxJumps) {
+                playerY -= 25;
+                playerJumpCount++;
+            }
+            playerX = Math.max(0, Math.min(worldWidth - playerWidth, playerX));
+            playerY = Math.max(0, Math.min(worldHeight - playerHeight, playerY));
+        }
+
+        function drawPlatform(x, y, width, height) {
+            ctx.fillStyle = '#633000';
+            ctx.fillRect(x - cameraX, y - cameraY, width, height);
+        }
+
+        function updateCamera() {
+            cameraX = Math.max(0, Math.min(worldWidth - canvas.width, playerX - canvas.width / 2));
+            cameraY = Math.max(0, Math.min(worldHeight - canvas.height, playerY - canvas.height / 2));
+        }
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Gravité simple
+            if (playerY < worldHeight - playerHeight) {
+                playerY += 0.8;
+            } else {
+                playerJumpCount = 0;
+            }
+
+            movePlayer();
+            updateCamera();
+
+            // Dessiner les plateformes
+            platforms.forEach((platform) =>
+                drawPlatform(platform.x, platform.y, platform.width, platform.height)
+            );
+
+            // Dessiner le joueur
+            drawPlayer();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        document.addEventListener('keydown', (e) => keys[e.key] = true);
+        document.addEventListener('keyup', (e) => keys[e.key] = false);
+
+        player.onload = function () {
+            gameLoop();
+        };
+    </script>
+</body>
+</html>
